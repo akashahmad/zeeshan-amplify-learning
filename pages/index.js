@@ -1,8 +1,46 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import Head from "next/head";
+import Image from "next/image";
+import styles from "../styles/Home.module.css";
+
+import Amplify from "aws-amplify";
+import awsconfig from "../src/aws-exports";
+
+import { DataStore } from '@aws-amplify/datastore';
+import { Blog } from '../src/models';
+
+Amplify.configure(awsconfig);
 
 export default function Home() {
+  const handleCreateClick = async () => {
+    await DataStore.save(
+      new Blog({
+        name: "Lorem ipsum dolor sit amet 1",
+      })
+    );
+
+    console.log("Item Ceated")
+  };
+
+  const handleUpdateClick = async () => {
+    /* Models in DataStore are immutable. To update a record you must use the copyOf function
+    to apply updates to the item’s fields rather than mutating the instance directly */
+    await DataStore.save(
+      Blog.copyOf(CURRENT_ITEM, (item) => {
+        // Update the values on {item} variable to update DataStore entry
+      })
+    );
+  };
+
+  const handleDeleteClick = async () => {
+    const modelToDelete = await DataStore.query(Blog, "cfb8e0bf-719f-45fb-a0aa-5eeeccc64fda");
+    DataStore.delete(modelToDelete);
+  };
+
+  const handleViewClick = async () => {
+    const models = await DataStore.query(Blog);
+    console.log(models);
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -12,44 +50,20 @@ export default function Home() {
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h2>Learn &rarr;</h2>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        <ul>
+          <li>
+            <button onClick={() => handleCreateClick()}>Create</button>
+          </li>
+          <li>
+            <button onClick={() => handleUpdateClick()}>update</button>
+          </li>
+          <li>
+            <button onClick={() => handleDeleteClick()}>Delete</button>
+          </li>
+          <li>
+            <button onClick={() => handleViewClick()}>View</button>
+          </li>
+        </ul>
       </main>
 
       <footer className={styles.footer}>
@@ -58,12 +72,12 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by{" "}
           <span className={styles.logo}>
             <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
           </span>
         </a>
       </footer>
     </div>
-  )
+  );
 }
